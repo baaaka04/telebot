@@ -1,0 +1,21 @@
+{
+  "name": "telebot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "App.js",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "node-telegram-bot-api": "^0.56.0",
+    "nodemon": "^2.0.15",
+    "sqlite-sync": "^0.3.9"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "dev": "nodemon -e js App.js",
+    "start": "node App.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

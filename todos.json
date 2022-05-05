@@ -1,16 +1,10 @@
 {
     "source": [
         {
-            "message": "тест",
-            "datetime": 1652355120000,
+            "message": "aaaaaaaaaaaaaa",
+            "datetime": 1651865400000,
             "repeatable": true,
-            "frequency": "month"
-        },
-        {
-            "message": "В пятницу к стоматологу в 9:00",
-            "datetime": 1651053600000,
-            "repeatable": false,
-            "frequency": null
+            "frequency": 3
         }
     ]
 }

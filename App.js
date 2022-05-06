@@ -5,12 +5,12 @@ const token = '5224733147:AAFaExlVjU0z8a4K2WL3HaqZkN0i79XX3Qo';
 const bot = new TelegramBot(token, { polling: true });
 const chatId = 224688427;
 let remindsQueue = [];
-let remindTimeID
+let remindTimeID;
 
 
 const App = () => {
 
-    getTodos().map((t) =>
+    getTodos().map(t =>
         setReminderTimeout(chatId, t, t.datetime, t.frequency)
     )
 
@@ -22,11 +22,17 @@ const App = () => {
             .join(''))
     })
 
-    bot.onText(/\/add(.+)/, (msg, match) => {
+    bot.onText(/\/add(.+)/, msg => {
         bot.sendMessage(chatId, 'Когда нужно напомнить?')
         bot.on('message', msg2 => {
-            const period = msg2.text
-            const datetimeValue = Date.parse(period) + 3 * 60 * 60 * 1000
+            let periodRemind = msg2.text.split(' ')[0]
+            let curYear = new Date().getFullYear()
+            if (periodRemind.length < 10) {
+                periodRemind = msg2.text.slice(0, 5) + '-' + curYear
+            }
+            periodRemind = periodRemind.split('-').reverse().join('-')
+            const timeRemind = msg2.text.split(' ')[1]
+            const datetimeValue = Date.parse(periodRemind + ' ' + timeRemind) + 3 * 60 * 60 * 1000
             bot.removeListener('message')
             bot.sendMessage(chatId, 'Через сколько дней повторить?')
             bot.on('message', msg3 => {
@@ -40,16 +46,18 @@ const App = () => {
                 })
                 writeTodos(todos)
                 setReminderTimeout(chatId, todos[todos.length - 1], datetimeValue, days)
-                bot.sendMessage(chatId, `Добавлено! ${todos[todos.length - 1].message} ${formatDate(datetimeValue)}`)
+                let freqRes = '';
+                days ? freqRes = `Повтор каждый ${days} день` : freqRes
+                bot.sendMessage(chatId, `Добавлено! ${todos[todos.length - 1].message} ${formatDate(datetimeValue)}. ${freqRes}`)
                 bot.removeListener('message')
             })
         })
     })
 
-    bot.onText(/\/del/, (msg) => {
+    bot.onText(/\/del/, msg => {
         bot.sendMessage(chatId, getTodos().map((todo, i) => `${i + 1}. ${todo.message}; ${formatDate(todo.datetime)}\n`).join(''))
         bot.sendMessage(msg.chat.id, 'Введите номер напоминания для удаления:')
-        bot.on('message', (msg2) => {
+        bot.on('message', msg2 => {
             if (/\d+/.test(msg2.text)) {
                 let remindIndex = +msg2.text - 1
                 bot.sendMessage(chatId, `Удалено: ${remindsQueue[remindIndex].name}`)
@@ -89,7 +97,7 @@ function formatDate(unixtime) {
 }
 
 function deleteTodo(dt) {
-    writeTodos(getTodos().filter((t) => dt !== t.datetime))
+    writeTodos(getTodos().filter(t => dt !== t.datetime))
 }
 
 function setReminderTimeout(chatId, todo, dt, days) {

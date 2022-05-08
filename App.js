@@ -16,9 +16,10 @@ const App = () => {
 
 
     bot.onText(/\/get/, () => {
+        const isRepeatableEvent = (t) => t.repeatable ? ` Повтор каждый ${t.frequency} день` : ''
         bot.sendMessage(chatId, getTodos()
             .map((todo, i) =>
-                `${i + 1}. ${todo.message}; ${formatDate(todo.datetime)}\n`)
+                `${i + 1}. ${todo.message}; ${formatDate(todo.datetime)}${isRepeatableEvent(todo)}\n`)
             .join(''))
     })
 
@@ -86,7 +87,7 @@ function writeTodos(arr) {
 }
 
 function formatDate(unixtime) {
-    const jsDate = new Date(unixtime) // + 3 * 60 * 60 * 1000)
+    const jsDate = new Date(unixtime)
 
     const y = jsDate.getFullYear()
     const m = (jsDate.getMonth() + 1).toString().padStart(2, '0')
@@ -114,6 +115,10 @@ function setReminderTimeout(chatId, todo, dt, days) {
     } else {
         remindTimeID = setTimeout(() => {
             bot.sendMessage(chatId, todo.message)
+            let otherTodos = getTodos().filter(t => t.message !== todo.message)
+            todo.datetime = getNextDateRemind(dt, days)
+            otherTodos.push(todo)
+            writeTodos(otherTodos)
             setReminderTimeout(chatId, todo, getNextDateRemind(dt, days), days)
         },
             waitingTime

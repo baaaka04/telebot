@@ -8,12 +8,15 @@ let remindsQueue = [];
 let remindTimeID;
 
 
-const App = () => {
+function App() {
 
     getTodos().map(t =>
         setReminderTimeout(chatId, t, t.datetime, t.frequency)
     )
 
+    bot.onText(/\/console/, () => {
+        console.log(remindsQueue)
+    })
 
     bot.onText(/\/get/, () => {
         const isRepeatableEvent = (t) => t.repeatable ? ` Повтор каждый ${t.frequency} день` : ''
@@ -61,10 +64,11 @@ const App = () => {
         bot.on('message', msg2 => {
             if (/\d+/.test(msg2.text)) {
                 let remindIndex = +msg2.text - 1
-                bot.sendMessage(chatId, `Удалено: ${remindsQueue[remindIndex].name}`)
-                clearTimeout(remindsQueue[remindIndex].ID)
-                remindsQueue = remindsQueue.filter((_, i) => i != remindIndex)
-                const filtered = getTodos().filter((_, i) => i != remindIndex)
+                let remindMessage = getTodos()[remindIndex].message
+                bot.sendMessage(chatId, `Удалено: ${remindMessage}`)
+                clearInterval(remindsQueue.find(item => item.name == remindMessage).ID)
+                remindsQueue = remindsQueue.filter(item => item.name != remindMessage)
+                const filtered = getTodos().filter(item => item.message != remindMessage)
                 writeTodos(filtered)
             } else {
                 bot.sendMessage(chatId, 'Ошибка, повторите попытку.')
@@ -101,29 +105,63 @@ function deleteTodo(dt) {
     writeTodos(getTodos().filter(t => dt !== t.datetime))
 }
 
-function setReminderTimeout(chatId, todo, dt, days) {
+async function setReminderTimeout(chatId, todo, dt, days) {
     let currentTime = new Date().getTime() + 3 * 60 * 60 * 1000
+    console.log('сообщение:', todo.message)
+    console.log('тек.время:', new Date(currentTime), currentTime)
+    console.log('когда напомнить', new Date(dt), dt)
     let waitingTime = dt - currentTime
+    let waitInMin = Math.round(waitingTime / (60 * 1000))
+    console.log('через сколько минут:', waitInMin)
+    console.log('-----------------------')
     if (!todo.repeatable) {
-        remindTimeID = setTimeout(() => {
+        remindTimeID = setMinutesTimeout(() => {
             bot.sendMessage(chatId, todo.message);
-            deleteTodo(dt)
+            deleteTodo(dt);
+            remindsQueue = remindsQueue.filter(item => item.name !== todo.message)
         },
-            waitingTime
+            waitInMin
         )
-        remindsQueue.push({ name: todo.message, ID: remindTimeID })
+        await remindTimeID
+        waitInMin > 0 ? remindsQueue.push({ name: todo.message, ID: remindTimeID }) : null
     } else {
-        remindTimeID = setTimeout(() => {
-            bot.sendMessage(chatId, todo.message)
-            let otherTodos = getTodos().filter(t => t.message !== todo.message)
-            todo.datetime = getNextDateRemind(dt, days)
-            otherTodos.push(todo)
-            writeTodos(otherTodos)
-            setReminderTimeout(chatId, todo, getNextDateRemind(dt, days), days)
-        },
-            waitingTime
+        remindTimeID = setMinutesTimeout(
+            () => {
+                bot.sendMessage(chatId, todo.message)
+                let otherTodos = getTodos().filter(t => t.message !== todo.message)
+                todo.datetime = getNextDateRemind(dt, days)
+                otherTodos.push(todo)
+                writeTodos(otherTodos)
+                setReminderTimeout(chatId, todo, getNextDateRemind(dt, days), days)
+            },
+            waitInMin
         )
+        await remindTimeID
         remindsQueue.push({ name: todo.message, ID: remindTimeID })
+    }
+}
+
+function setMinutesTimeout(callback, minutes) {
+    // 60 seconds in a minute
+    let msInMin = 60 * 1000;
+    let minCount = 0;
+    if (minutes <= 0) {
+        callback.apply(this, [])
+    } else {
+        return new Promise(resolve => {
+            let timer = setInterval(
+                function () {
+                    minCount++;  // a minutes has passed
+
+                    if (minCount == minutes || minutes < 0) {
+                        clearInterval(timer);
+                        callback.apply(this, []);
+                    }
+                },
+                msInMin
+            )
+            resolve(timer)
+        })
     }
 }
 

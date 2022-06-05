@@ -1,5 +1,6 @@
-const TelegramBot = require('node-telegram-bot-api');
-const fs = require('fs');
+import TelegramBot from 'node-telegram-bot-api';
+import fs from 'fs';
+import { formatDate } from './utils.js';
 
 const token = '5224733147:AAFaExlVjU0z8a4K2WL3HaqZkN0i79XX3Qo';
 const bot = new TelegramBot(token, { polling: true });
@@ -95,17 +96,6 @@ function getTodosFromJSON() {
 function writeTodosToJSON(arr) {
     const todosToAdd = JSON.stringify({ source: arr }, null, 4)
     fs.writeFileSync('./todos.json', todosToAdd)
-}
-
-function formatDate(unixtime) {
-    const jsDate = new Date(unixtime)
-
-    const y = jsDate.getUTCFullYear()
-    const m = (jsDate.getUTCMonth() + 1).toString().padStart(2, '0')
-    const d = jsDate.getUTCDate().toString().padStart(2, '0')
-    const h = jsDate.getUTCHours().toString().padStart(2, '0')
-    const min = jsDate.getUTCMinutes().toString().padStart(2, '0')
-    return `${d}-${m}-${y} ${h}:${min}`
 }
 
 function deleteTodoJSON(dt) {

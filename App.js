@@ -142,6 +142,7 @@ async function setReminderTimeout(chatId, todo, dt, days) {
             },
             waitInMin
         )
+        remindsQueue = remindsQueue.filter(item => item.name != todo.message)
         remindsQueue.push({ name: todo.message, ID: remindTimeID })
     }
 }

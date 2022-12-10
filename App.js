@@ -6,7 +6,7 @@ const token = '5224733147:AAFaExlVjU0z8a4K2WL3HaqZkN0i79XX3Qo';
 const bot = new TelegramBot(token, { polling: true });
 const chatId = 224688427;
 let remindsQueue = [];
-const localHoursLag = 6 * 60 * 60 * 1000
+const localHoursLag = 3 * 60 * 60 * 1000 // for Podolsk
 
 function App() {
 
@@ -32,7 +32,7 @@ function App() {
             }
             periodRemind = periodRemind.split('-').reverse().join('-')
             const timeRemind = msg2.text.split(' ')[1]
-            const datetimeValue = Date.parse(periodRemind + ' ' + timeRemind) + localHoursLag
+            const datetimeValue = Date.parse(periodRemind + ' ' + timeRemind) //+ localHoursLag
             bot.removeListener('message')
 
             bot.sendMessage(chatId, 'Через сколько дней повторить?')

@@ -1,6 +1,6 @@
 
 export function formatDate(unixtime) {
-    const jsDate = new Date(unixtime)
+    const jsDate = new Date(unixtime + 3 * 60 * 60 * 1000 )
 
     const y = jsDate.getUTCFullYear()
     const m = (jsDate.getUTCMonth() + 1).toString().padStart(2, '0')

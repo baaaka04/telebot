@@ -6,7 +6,7 @@ const token = '5224733147:AAFaExlVjU0z8a4K2WL3HaqZkN0i79XX3Qo';
 const bot = new TelegramBot(token, { polling: true });
 const chatId = 224688427;
 let remindsQueue = [];
-
+const localHoursLag = 6 * 60 * 60 * 1000
 
 function App() {
 
@@ -32,7 +32,7 @@ function App() {
             }
             periodRemind = periodRemind.split('-').reverse().join('-')
             const timeRemind = msg2.text.split(' ')[1]
-            const datetimeValue = Date.parse(periodRemind + ' ' + timeRemind) + 3 * 60 * 60 * 1000
+            const datetimeValue = Date.parse(periodRemind + ' ' + timeRemind) + localHoursLag
             bot.removeListener('message')
 
             bot.sendMessage(chatId, 'Через сколько дней повторить?')
@@ -102,8 +102,12 @@ function deleteTodoJSON(dt) {
     writeTodosToJSON(getTodosFromJSON().filter(t => dt !== t.datetime))
 }
 
+function localTime () {
+    return new Date().getTime() + localHoursLag
+}
+
 async function setReminderTimeout(chatId, todo, dt, days) {
-    let currentTime = new Date().getTime() + 3 * 60 * 60 * 1000
+    let currentTime = localTime()
     console.log('сообщение:', todo.message)
     console.log('тек.время:', new Date(currentTime), currentTime)
     console.log('когда напомнить', new Date(dt), dt)
